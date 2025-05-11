@@ -704,101 +704,7 @@ app.get('/e-hentai/:APIKEY', async (req, res) => {
 
 
 // Montagem
-app.get('/nuvem/:APIKEY', async (req, res) => {
-    const { APIKEY } = req.params;
-    const { 
-        teks,
-        curvatura = 30,     // 0-100
-        opacidade = 80,     // 1-100%
-        gradiente = 'gelo', // neve | gelo | nevoa | perola | aurora
-        posX = 'center',    // número | left | center | right
-        posY = '50%'        // número | porcentagem
-    } = req.query;
 
-    try {
-        // ===== VERIFICAÇÃO =====
-        const user = await User.findOne({ key: APIKEY });
-        const isLocalhost = APIKEY === 'localhost';
-        if ((!user || user.saldo <= 0) && !isLocalhost) return res.status(402).json(loghandler.notparam);
-        if (!teks) return res.status(400).json({ error: 'Parâmetro "teks" obrigatório' });
-
-        // ===== CARREGAR FUNDO =====
-        const bg = await Jimp.read('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQeek5_bBsYjlFEjfNgqS0WfoA_LwFcDzvSUxqd6iPXPtXNW_LfVPVgdv-&s=10');
-        
-        // ===== CRIAR TEXTO =====
-        const font = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-        const texto = teks.toUpperCase();
-        const textWidth = Jimp.measureText(font, texto);
-        const textLayer = new Jimp(textWidth + 200, 200, 0x00000000); 
-
-        // ===== CURVATURA =====
-        let x = 50;
-        const baseY = 100;
-        texto.split('').forEach((char, index) => {
-            const angle = (index / texto.length) * Math.PI * 2;
-            const yOffset = Math.sin(angle) * curvatura;
-            textLayer.print(font, x, baseY + yOffset, char);
-            x += Jimp.measureText(font, char);
-        });
-
-        // ===== GRADIENTE =====
-        const gradients = {
-            neve:   [[255,255,255], [240,248,255]],
-            gelo:   [[176,224,230], [135,206,235]],
-            nevoa:  [[255,255,255], [245,245,245]],
-            perola: [[240,248,255], [230,230,250]],
-            aurora: [[255,255,255], [224,255,255]]
-        };
-        
-        const colors = gradients[gradiente] || gradients.gelo;
-        textLayer.scan(0, 0, textLayer.bitmap.width, textLayer.bitmap.height, (x, y, idx) => {
-            if (textLayer.bitmap.data[idx + 3] > 0) {
-                const progress = x / textLayer.bitmap.width;
-                textLayer.bitmap.data[idx] = colors[0][0] + (colors[1][0] - colors[0][0]) * progress;
-                textLayer.bitmap.data[idx+1] = colors[0][1] + (colors[1][1] - colors[0][1]) * progress;
-                textLayer.bitmap.data[idx+2] = colors[0][2] + (colors[1][2] - colors[0][2]) * progress;
-                textLayer.bitmap.data[idx+3] *= opacidade/100;
-            }
-        });
-
-        // ===== POSICIONAMENTO =====
-        let finalX;
-        switch(posX.toLowerCase()) {
-            case 'left': finalX = 50; break;
-            case 'right': finalX = bg.bitmap.width - textLayer.bitmap.width - 50; break;
-            default: finalX = (bg.bitmap.width - textLayer.bitmap.width) / 2;
-        }
-
-        let finalY;
-        if (posY.includes('%')) {
-            finalY = (bg.bitmap.height * parseInt(posY)) / 100 - textLayer.bitmap.height/2;
-        } else {
-            finalY = parseInt(posY) || 0;
-        }
-
-        // ===== COMPOSIÇÃO FINAL =====
-        bg.composite(textLayer, finalX, finalY, {
-            mode: Jimp.BLEND_SOURCE_OVER,
-            opacitySource: 1
-        });
-
-        // ===== ATUALIZAR SALDO =====
-        if (!isLocalhost && user) {
-            user.saldo -= 1;
-            await user.save();
-        }
-
-        res.set('Content-Type', 'image/jpeg');
-        res.send(await bg.quality(85).getBufferAsync(Jimp.MIME_JPEG));
-
-    } catch (error) {
-        console.error('Erro:', error);
-        res.status(500).json({ 
-            status: false,
-            error: error.message
-        }); 
-    }
-});
 app.get('/anime/:APIKEY', async (req, res) => {
     const { APIKEY } = req.params;
     const { 
@@ -980,145 +886,6 @@ app.get('/anime/:APIKEY', async (req, res) => {
 
 //YT 
 
-const ytdl = require('@distube/ytdl-core');
-
-app.get('/play-audio/:APIKEY', async (req, res) => {
-  const { APIKEY } = req.params;
-  const { q } = req.query;
-
-  try {
-    // Verificação do usuário
-    const user = await User.findOne({ key: APIKEY });
-    if (!user) return res.status(401).json({ error: 'Chave inválida' });
-    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
-
-    // Pesquisa otimizada com tratamento correto
-    const search = await yts(q);
-    if (!search?.videos?.length) return res.status(404).json({ error: 'Nenhum resultado encontrado' });
-    
-    const video = search.videos[0];
-    const info = await ytdl.getInfo(video.url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-      }
-    });
-
-    // Filtro corrigido para áudio
-    const bestAudio = info.formats
-      .filter(f => f.hasAudio && !f.hasVideo)
-      .sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0))[0];
-
-    if (!bestAudio) return res.status(404).json({ error: 'Formato de áudio não disponível' });
-
-    // Resposta padrão
-    const response = {
-      status: true,
-      código: 200,
-      tipo: 'audio',
-      resultado: {
-        id: video.videoId,
-        titulo: video.title.replace(/[^\w\sà-úÀ-Ú]/g, ''),
-        duracao: video.duration.timestamp,
-        thumb: video.thumbnail,
-        formato: {
-          url: bestAudio.url,
-          qualidade: `${bestAudio.audioBitrate}kbps`,
-          codec: bestAudio.audioCodec,
-          tamanho: bestAudio.contentLength
-        },
-        artista: video.author.name,
-        views: video.views
-      }
-    };
-
-    // Atualização de saldo
-    if (!user.isAdm) {
-      user.saldo -= 1;
-      await user.save();
-    }
-
-    res.json(response);
-
-  } catch (error) {
-    console.error('Erro no áudio:', error);
-    res.status(500).json({
-      status: false,
-      código: 500,
-      mensagem: error.message.includes('timed out') ? 
-        'Tempo de pesquisa esgotado' : 
-        'Erro ao processar áudio'
-    });
-  }
-});
-
-app.get('/play-video/:APIKEY', async (req, res) => {
-  const { APIKEY } = req.params;
-  const { q } = req.query;
-
-  try {
-    // Verificação do usuário
-    const user = await User.findOne({ key: APIKEY });
-    if (!user) return res.status(401).json({ error: 'Chave inválida' });
-    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
-
-    // Pesquisa com tratamento correto
-    const search = await yts(q);
-    if (!search?.videos?.length) return res.status(404).json({ error: 'Nenhum resultado encontrado' });
-    
-    const video = search.videos[0];
-    const info = await ytdl.getInfo(video.url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-      }
-    });
-
-    // Filtro corrigido para vídeo
-    const bestVideo = info.formats
-      .filter(f => f.hasVideo && f.hasAudio && f.qualityLabel)
-      .sort((a, b) => parseInt(b.qualityLabel) - parseInt(a.qualityLabel))[0];
-
-    if (!bestVideo) return res.status(404).json({ error: 'Formato de vídeo não disponível' });
-
-    // Resposta padrão
-    const response = {
-      status: true,
-      código: 200,
-      tipo: 'video',
-      resultado: {
-        id: video.videoId,
-        titulo: video.title.replace(/[^\w\sà-úÀ-Ú]/g, ''),
-        duracao: video.duration.timestamp,
-        thumb: video.thumbnail,
-        formato: {
-          url: bestVideo.url,
-          qualidade: bestVideo.qualityLabel,
-          codec: bestVideo.codecs.split(';')[0],
-          tamanho: bestVideo.contentLength
-        },
-        artista: video.author.name,
-        views: video.views
-      }
-    };
-
-    // Atualização de saldo
-    if (!user.isAdm) {
-      user.saldo -= 1;
-      await user.save();
-    }
-
-    res.json(response);
-
-  } catch (error) {
-    console.error('Erro no vídeo:', error);
-    res.status(500).json({
-      status: false,
-      código: 500,
-      mensagem: error.message.includes('timed out') ? 
-        'Tempo de pesquisa esgotado' : 
-        'Erro ao processar vídeo'
-    });
-  }
-}); 
 
 app.get('/plaq/:APIKEY', async (req, res) => {
     const { APIKEY } = req.params;
@@ -1380,6 +1147,137 @@ app.get('/reddit/safe/:APIKEY', async (req, res) => {
     } catch (error) {
         res.status(500).json({ 
             error: "Erro na busca segura",
+            details: error.message
+        });
+    }
+});
+const ytdl = require('@distube/ytdl-core');
+
+// ============== ROTA DE ÁUDIO CORRIGIDA ==============\\
+
+app.get('/play-audio/:APIKEY', async (req, res) => {
+    const { APIKEY } = req.params;
+    const { q } = req.query;
+
+    try {
+        // Verificação do usuário
+        const user = await User.findOne({ key: APIKEY });
+        if (!user) return res.status(401).json({ error: '🔑 Chave inválida' });
+        if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
+        if (!q) return res.status(400).json({ error: '🔍 Parâmetro de pesquisa obrigatório' });
+
+        // Buscar vídeo no YouTube
+        const { videos } = await yts(q);
+        if (!videos?.length) return res.status(404).json({ error: '❌ Nenhum vídeo encontrado' });
+
+        // Obter informações do primeiro vídeo
+        const video = videos[0];
+        const info = await ytdl.getInfo(video.videoId);
+
+        // Filtrar e selecionar melhor formato de áudio
+        const audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
+            .filter(f => f.audioBitrate)
+            .sort((a, b) => b.audioBitrate - a.audioBitrate);
+
+        if (!audioFormats.length) return res.status(404).json({ error: '🔇 Formato de áudio não encontrado' });
+
+        const bestAudio = audioFormats[0];
+
+        // Atualizar saldo
+        if (!user.isAdm) await diminuirSaldo(user.username);
+
+        res.json({
+            status: true,
+            title: video.title,
+            duration: video.duration.timestamp,
+            thumbnail: video.thumbnail,
+            audio_url: bestAudio.url,
+            format: bestAudio.container,
+            bitrate: bestAudio.audioBitrate,
+            codec: bestAudio.audioCodec
+        });
+
+    } catch (error) {
+        console.error('Erro no download de áudio:', error);
+        res.status(500).json({
+            status: false,
+            error: '🎧 Erro ao processar áudio',
+            details: error.message
+        });
+    }
+});
+
+// ============== ROTA DE VÍDEO CORRIGIDA ==============\\
+
+app.get('/play-video/:APIKEY', async (req, res) => {
+    const { APIKEY } = req.params;
+    const { q, quality = 'highest' } = req.query;
+
+    try {
+        // Verificação do usuário
+        const user = await User.findOne({ key: APIKEY });
+        if (!user) return res.status(401).json({ error: '🔑 Chave inválida' });
+        if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
+        if (!q) return res.status(400).json({ error: '🔍 Parâmetro de pesquisa obrigatório' });
+
+        // Buscar vídeo no YouTube
+        const { videos } = await yts(q);
+        if (!videos?.length) return res.status(404).json({ error: '❌ Nenhum vídeo encontrado' });
+
+        // Obter informações do primeiro vídeo
+        const video = videos[0];
+        const info = await ytdl.getInfo(video.videoId);
+
+        // Sistema inteligente de seleção de qualidade
+        const getBestFormat = () => {
+            const formats = ytdl.filterFormats(info.formats, 'videoandaudio');
+            
+            // Priorizar MP4 com áudio
+            const mp4WithAudio = formats.filter(f => 
+                f.container === 'mp4' && 
+                f.qualityLabel &&
+                f.hasAudio
+            );
+
+            // Se pedir qualidade específica
+            if (quality !== 'highest') {
+                const requestedQuality = mp4WithAudio
+                    .filter(f => f.qualityLabel === quality)
+                    .sort((a, b) => parseInt(b.qualityLabel) - parseInt(a.qualityLabel));
+
+                if (requestedQuality.length) return requestedQuality[0];
+            }
+
+            // Ordenar por melhor qualidade
+            return mp4WithAudio.sort((a, b) => 
+                parseInt(b.qualityLabel) - parseInt(a.qualityLabel)
+            )[0] || formats[0];
+        };
+
+        const bestFormat = getBestFormat();
+        if (!bestFormat) return res.status(404).json({ error: '📹 Formato de vídeo não encontrado' });
+
+        // Atualizar saldo
+        if (!user.isAdm) await diminuirSaldo(user.username);
+
+        res.json({
+            status: true,
+            title: video.title,
+            duration: video.duration.timestamp,
+            thumbnail: video.thumbnail,
+            video_url: bestFormat.url,
+            quality: bestFormat.qualityLabel || 'desconhecida',
+            format: bestFormat.container,
+            resolution: bestFormat.width && bestFormat.height 
+                ? `${bestFormat.width}x${bestFormat.height}`
+                : 'desconhecida'
+        });
+
+    } catch (error) {
+        console.error('Erro no download de vídeo:', error);
+        res.status(500).json({
+            status: false,
+            error: '🎥 Erro ao processar vídeo',
             details: error.message
         });
     }
