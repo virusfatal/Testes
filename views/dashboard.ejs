@@ -408,9 +408,8 @@
         <i class="fas fa-download me-2"></i>Downloads
     </a>
     <ul class="dropdown-menu">
-        <li><a href="/play-audio/<%= user.key %>?q=mc livinho" class="dropdown-item">🎵 Play-Audio</a></li>
-        <li><a href="/play-video/<%= user.key %>?q=mc livinho" class="dropdown-item">🎥 Play-Vídeo</a></li>
-        <!-- Removi documents/pdf pois não existe na sua rota -->
+        <li><a href="/play-audio/<%= user.key %>?q=MC" class="dropdown-item">🎵 Play-Audio</a></li>
+        <li><a href="/play-video/<%= user.key %>?q=MC" class="dropdown-item">🎥 Play-Vídeo</a></li>
     </ul>
 </div>
 
@@ -419,9 +418,9 @@
         <i class="fas fa-info-circle me-2"></i>Infos
     </a>
     <ul class="dropdown-menu">
-        <li><a href="/movie/<%= user.key %>?q=" class="dropdown-item">🎬 Filmes</a></li>
-        <li><a href="/intoxianime/<%= user.key %>/search?q=" class="dropdown-item">📺 Animes</a></li>
-        <li><a href="/pesquisa/<%= user.key %>?q=" class="dropdown-item">▶️ Youtube</a></li>
+        <li><a href="/movie/<%= user.key %>?q=PESQUISA" class="dropdown-item">🎬 Filmes</a></li>
+        <li><a href="/intoxianime/<%= user.key %>/search?q=PESQUISA" class="dropdown-item">📺 Animes</a></li>
+        <li><a href="/pesquisa/<%= user.key %>?q=PESQUISA" class="dropdown-item">▶️ Youtube</a></li>
     </ul>
 </div>
 
@@ -431,7 +430,9 @@
     </a>
     <ul class="dropdown-menu">
         <li><a href="/memes/<%= user.key %>" class="dropdown-item">🤣 Memes</a></li>
-        <li><a href="/pixabay/<%= user.key %>/search?q=" class="dropdown-item">🏞️ Pixabay</a></li>
+        <li><a href="/pixabay/<%= user.key %>/search?q=PESQUISA" class="dropdown-item">🏞️ Pixabay</a></li>
+        <li><a href="/metadinha/<%= user.key %>" class="dropdown-item">🖼️ Metadinha</a></li>
+        <li><a href="/reddit/safe/<%= user.key %>?q=PESQUISA" class="dropdown-item">🌅 Reddit Safe</a></li>
     </ul>
 </div>
 
@@ -440,9 +441,9 @@
         <i class="fas fa-exclamation-triangle me-2"></i>+18
     </a>
     <ul class="dropdown-menu">
-        <li><a href="/xvideos/<%= user.key %>/search?q=mi" class="dropdown-item">🔞 Xvideos</a></li>
-        <!-- Adicionei a rota e-hentai que existe em suas rotas -->
-        <li><a href="/e-hentai/<%= user.key %>?q=" class="dropdown-item">👁️ E-Hentai</a></li>
+        <li><a href="/xvideos/<%= user.key %>/search?q=PESQUISA" class="dropdown-item">🔞 Xvideos</a></li>
+        <li><a href="/e-hentai/<%= user.key %>?q=pt-br" class="dropdown-item">👁️ E-Hentai</a></li>
+        <li><a href="/reddit/nsfw/<%= user.key %>?q=PESQUISA" class="dropdown-item">📸 Reddit NSFW</a></li>
     </ul>
 </div>
 
@@ -451,9 +452,8 @@
         <i class="fas fa-palette me-2"></i>Montagens
     </a>
     <ul class="dropdown-menu">
-        <li><a href="/anime/<%= user.key %>?teks=" class="dropdown-item">🎨 Anime</a></li>
-        <!-- Adicionei a rota plaq que existe em suas rotas -->
-        <li><a href="/plaq/<%= user.key %>?texto=" class="dropdown-item">🔞 Plaq</a></li>
+        <li><a href="/anime/<%= user.key %>?teks=TEXTO" class="dropdown-item">🎨 Anime</a></li>
+        <li><a href="/plaq/<%= user.key %>?texto=TEXTO" class="dropdown-item">🚗 Placa</a></li>
     </ul>
 </div>
 
