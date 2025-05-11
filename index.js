@@ -1322,49 +1322,71 @@ app.get('/reddit/nsfw/:APIKEY', async (req, res) => {
 
 app.get('/reddit/safe/:APIKEY', async (req, res) => {
     const { APIKEY } = req.params;
-    const { q, limit = 15, br = 'true' } = req.query;
+    const { q, limit = 15 } = req.query;
 
     try {
-        if (!(await User.findOne({ key: APIKEY }))) {
-            return res.status(401).json({ error: "Chave API inválida" });
+        // Verificação da chave
+        if (!(await User.exists({ key: APIKEY }))) {
+            return res.status(401).json({ error: "API Key inválida" });
         }
 
-        const safeSubsBR = ['natureza', 'fotografiaBR', 'animais', 'viagensbrasil', 'culturabr'];
-        
+        // Busca livre com filtro NSFW estrito
         const response = await axios.get('https://www.reddit.com/search.json', {
             params: {
-                q: `${q} (nsfw:no) ${br === 'true' ? `subreddit:${safeSubsBR.join(',')}` : ''} (url:.jpg OR url:.png)`,
-                sort: 'top',
-                t: 'year',
+                q: `${q} (nsfw:no) (url:.jpg OR url:.png OR url:.webp)`,
+                sort: 'relevance',
+                t: 'all',
                 limit: 100,
-                include_over_18: 0,
+                include_over_18: 0, // Bloqueio duplo
                 raw_json: 1
             },
-            headers: { 'User-Agent': 'Mozilla/5.0' }
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': 'https://www.reddit.com/'
+            }
         });
 
-        const urls = response.data.data.children
-            .filter(post => !post.data.over_18)
-            .map(post => post.data.url.replace(/\?.*|(&amp;)/g, ''))
+        // Processamento otimizado
+        const safeUrls = response.data.data.children
+            .filter(post => {
+                // Verificação tripla de segurança
+                const isNSFW = post.data.over_18 || 
+                              /nsfw/i.test(post.data.title) || 
+                              /nsfw/i.test(post.data.subreddit);
+                return !isNSFW;
+            })
+            .map(post => {
+                const cleanUrl = new URL(post.data.url);
+                cleanUrl.search = ''; // Remove parâmetros
+                return cleanUrl.href
+                    .replace('preview.redd.it', 'i.redd.it')
+                    .replace('&amp;', '&');
+            })
+            .filter(url => /\.(jpe?g|png|webp)$/i.test(url))
             .slice(0, limit);
 
-        const result = { search: q, safe: true };
-        urls.forEach((url, index) => {
+        // Construção dinâmica do JSON
+        const result = {
+            query: q,
+            safe_search: true,
+            count: safeUrls.length
+        };
+        safeUrls.forEach((url, index) => {
             result[`url${index + 1}`] = url;
         });
 
-        res.json({
-            ...result,
-            count: urls.length
-        });
+        res.json(result);
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            error: "Erro na busca segura",
+            details: error.message
+        });
     }
 });
 // ============== ROTAS NORMAIS DA API ==============\\
 
-app.listen(3219, () => {
+app.listen(3219, 8080, 80, () => {
   console.log("Server rodando: http://0.0.0.0:3219")
 })
 
