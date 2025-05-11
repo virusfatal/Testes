@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Usuários</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --accent: #6d28d9;
+            --text-primary: #e0e0ff;
+            --text-secondary: #a1a1cc;
+            --border: rgba(255,255,255,0.1);
+            --danger: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Menu Lateral */
+        .menu-container {
+            position: fixed;
+            top: 0;
+            left: -260px;
+            width: 260px;
+            height: 100%;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            border-right: 1px solid var(--border);
+        }
+
+        .menu-container.show-menu {
+            left: 0;
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .close-button {
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            color: var(--accent);
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 900;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .menu-toggle {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            color: var(--accent);
+        }
+
+        .home-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .home-link:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--accent);
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            padding: 2rem;
+            margin-left: 0;
+            transition: margin-left 0.3s;
+        }
+
+        .show-menu ~ .main-content {
+            margin-left: 260px;
+        }
+
+        /* Card de Usuários */
+        .user-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .field-value {
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        /* Formulário e Botões */
+        .search-form {
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(109,40,217,0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5b21b6;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #bb2d3b;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .show-menu ~ .main-content {
+                margin-left: 0;
+            }
+
+            .user-info {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .home-link span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Menu Lateral -->
+    <div class="menu-container" id="menu">
+        <div class="menu-header">
+            <h3>Painel Admin</h3>
+            <span class="close-button" onclick="toggleMenu()">&times;</span>
+        </div>
+        <div class="menu-content">
+            <!-- Adicione itens do menu aqui -->
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <span class="menu-toggle" onclick="toggleMenu()">&#9776;</span>
+        <h1>Lista de Usuários</h1>
+        <a href="/#" class="home-link">
+            <i class="fas fa-home"></i>
+            <span>Voltar ao Início</span>
+        </a>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <form class="search-form" action="/search" method="GET">
+            <input type="text" name="search" class="search-input" placeholder="Pesquisar usuário...">
+        </form>
+
+        <div class="user-list">
+            <% users.forEach((user)=> { %>
+                <div class="user-card">
+                    <div class="user-info">
+                        <div class="user-field">
+                            <span class="field-label">Usuário</span>
+                            <span class="field-value"><%= user.username %></span>
+                        </div>
+                        <div class="user-field">
+                            <span class="field-label">Senha</span>
+                            <span class="field-value"><%= user.password %></span>
+                        </div>
+                        <div class="user-field">
+                            <span class="field-label">Chave</span>
+                            <span class="field-value"><%= user.key %></span>
+                        </div>
+                        <div class="user-field">
+                            <span class="field-label">Saldo</span>
+                            <span class="field-value"><%= user.saldo %></span>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-danger" onclick="confirmDelete('<%= user.username %>')">
+                            <i class="fas fa-trash"></i>Deletar
+                        </button>
+                        <a href="/editar/<%= user.username %>" class="btn btn-primary">
+                            <i class="fas fa-edit"></i>Editar
+                        </a>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(username) {
+            if (confirm(`Tem certeza que deseja deletar ${username}?`)) {
+                window.location.href = '/deletar/' + username;
+            }
+        }
+
+        function toggleMenu() {
+            document.getElementById('menu').classList.toggle('show-menu');
+        }
+    </script>
+</body>
+</html>

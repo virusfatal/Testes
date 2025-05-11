@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Lunar</title>
+    
+    <meta property="og:title" content="CRIAR CONTA">
+    <meta property="og:description" content="FEITA POR: @clovermods">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://telegra.ph/file/e28fabcd7e856b4bcef0a.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --space-blue: #0a1a2f;
+            --neon-cyan: #00f3ff;
+            --stardust-white: #eef7ff;
+            --galaxy-purple: #6a00ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url(https://i.pinimg.com/originals/f2/bf/43/f2bf432e3a5c7b14a2c97451e7c6c50f.gif) fixed center/cover;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cosmic-container {
+            background: linear-gradient(145deg, 
+                rgba(10, 26, 47, 0.95) 0%, 
+                rgba(16, 35, 62, 0.9) 100%);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(106, 0, 255, 0.3);
+            box-shadow: 0 0 50px rgba(106, 0, 255, 0.2);
+            backdrop-filter: blur(12px);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .cosmic-container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.2em;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+
+        .input-wrapper {
+            margin-bottom: 1.8rem;
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(238, 247, 255, 0.6);
+            transition: color 0.3s ease;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(106, 0, 255, 0.2);
+            border-radius: 8px;
+            color: var(--stardust-white);
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
+            background: rgba(0, 243, 255, 0.03);
+        }
+
+        input:focus + i {
+            color: var(--neon-cyan);
+        }
+
+        .security-alert {
+            background: rgba(255, 234, 0, 0.1);
+            border: 1px solid rgba(255, 234, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            color: #ffe900;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .security-alert i {
+            font-size: 1.2em;
+        }
+
+        button {
+            width: 100%;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, 
+                var(--galaxy-purple) 0%, 
+                var(--neon-cyan) 100%);
+            border: none;
+            border-radius: 8px;
+            color: var(--stardust-white);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 35px rgba(106, 0, 255, 0.4);
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 20%, 
+                rgba(255,255,255,0.15) 50%, 
+                transparent 80%);
+            animation: buttonShine 3s infinite;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: rgba(238, 247, 255, 0.8);
+        }
+
+        .login-link a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+            position: relative;
+            font-weight: 600;
+        }
+
+        .login-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--neon-cyan);
+            transition: width 0.3s ease;
+        }
+
+        .login-link a:hover::after {
+            width: 100%;
+        }
+
+        @keyframes buttonShine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        @media (max-width: 480px) {
+            .cosmic-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+
+    <script>
+        // Cria estrelas dinâmicas
+        function createStars() {
+            const container = document.createElement('div');
+            container.className = 'stars';
+            for(let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.setProperty('--duration', `${2 + Math.random() * 3}s`);
+                container.appendChild(star);
+            }
+            document.body.appendChild(container);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            
+            const form = document.getElementById('register-form');
+            form.addEventListener('submit', function(e) {
+                const username = document.getElementById('username');
+                if(username.value.includes(' ')) {
+                    e.preventDefault();
+                    username.classList.add('input-error');
+                    setTimeout(() => username.classList.remove('input-error'), 500);
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="cosmic-container">
+        <form id="register-form" action="/register" method="post">
+            <h1>CRIAR CONTA</h1>
+            
+            <div class="input-wrapper">
+                <i class="fas fa-user-astronaut"></i>
+                <input type="text" id="username" name="username" 
+                       placeholder="Nome de Usuário" required>
+            </div>
+
+            <div class="input-wrapper">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" name="password" 
+                       placeholder="Senha" required>
+            </div>
+
+            <div class="input-wrapper">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" name="email" 
+                       placeholder="E-mail" required>
+            </div>
+
+            <div class="security-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Não use senhas importantes</span>
+            </div>
+
+            <button type="submit">
+                <span class="btn-text">CRIAR CONTA</span>
+            </button>
+
+            <p class="login-link">
+                Já possui conta? <a href="/">Acesse aqui</a>
+            </p>
+        </form>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Lunar</title>
+
+  <meta property="og:title" content="ENTRAR">
+  <meta property="og:description" content="FEITA POR: @clovermods">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://telegra.ph/file/e28fabcd7e856b4bcef0a.jpg">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --main-color: #6fa8dc;
+      --secondary-color: #2a4a6e;
+      --glow-color: rgba(111, 168, 220, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url(https://i.pinimg.com/originals/f2/bf/43/f2bf432e3a5c7b14a2c97451e7c6c50f.gif) no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .water-effect {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(transparent 85%, rgba(255,255,255,0.1) 90%, transparent 95%);
+      animation: waterFlow 20s linear infinite;
+    }
+
+    .login-box {
+      background: rgba(5, 15, 31, 0.85);
+      padding: 40px 50px;
+      border-radius: 20px;
+      box-shadow: 0 0 50px var(--glow-color);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+      z-index: 2;
+      backdrop-filter: blur(8px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 70px var(--glow-color);
+    }
+
+    h1 {
+      color: #eef7ff;
+      text-align: center;
+      margin-bottom: 35px;
+      font-weight: 600;
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--main-color), transparent);
+    }
+
+    .input-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(78, 130, 193, 0.3);
+      border-radius: 8px;
+      color: #eef7ff;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--main-color);
+      background: rgba(78, 130, 193, 0.15);
+      box-shadow: 0 0 15px var(--glow-color);
+    }
+
+    .input-group:hover input {
+      transform: translateY(-2px);
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--main-color) 0%, var(--secondary-color) 100%);
+      border: none;
+      border-radius: 8px;
+      color: #eef7ff;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: buttonShine 3s infinite;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 30px var(--glow-color);
+    }
+
+    .register-link {
+      text-align: center;
+      margin-top: 25px;
+      color: rgba(238, 247, 255, 0.8);
+    }
+
+    a {
+      color: var(--main-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--main-color);
+      transition: width 0.3s ease;
+    }
+
+    a:hover::after {
+      width: 100%;
+    }
+
+    @keyframes waterFlow {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100vh; }
+    }
+
+    @keyframes buttonShine {
+      0% { transform: translateX(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) rotate(45deg); }
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 30px;
+        margin: 20px;
+      }
+      
+      button {
+        padding: 12px;
+      }
+    }
+
+    .stars {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle var(--duration) ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+  </style>
+  
+  <script>
+    // Adiciona estrelas dinâmicas
+    function createStars() {
+      const container = document.createElement('div');
+      container.className = 'stars';
+      for(let i = 0; i < 100; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.width = `${Math.random() * 3}px`;
+        star.style.height = star.style.width;
+        star.style.setProperty('--duration', `${2 + Math.random() * 3}s`);
+        container.appendChild(star);
+      }
+      document.body.appendChild(container);
+    }
+
+    window.onload = function() {
+      createStars();
+      
+      // Efeito de ripple nos inputs
+      document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('click', function(e) {
+          const ripple = document.createElement('div');
+          ripple.style.position = 'absolute';
+          ripple.style.width = '10px';
+          ripple.style.height = '10px';
+          ripple.style.background = 'rgba(255,255,255,0.3)';
+          ripple.style.borderRadius = '50%';
+          ripple.style.transform = 'translate(-50%, -50%)';
+          ripple.style.left = e.clientX + 'px';
+          ripple.style.top = e.clientY + 'px';
+          ripple.style.animation = 'ripple 0.6s linear';
+          document.body.appendChild(ripple);
+          
+          setTimeout(() => ripple.remove(), 600);
+        });
+      });
+    }
+
+    // Função original de login mantida
+    function logar() {
+      var login = document.getElementById('login').value;
+      var password = document.getElementById('password').value;
+
+      if (login == "Admin" && password == "1234") {
+        location.href = "docs.html";
+      }
+      // ... demais condições mantidas
+    }
+  </script>
+</head>
+
+<body>
+  <div class="water-effect"></div>
+  
+  <div class="login-box">
+    <form action="/login" method="post">
+      <h1>🇧🇷 Gon APIs 🫡</h1>
+      <div class="input-group">
+        <input type="text" placeholder="Nome de Usuário" id="username" name="username" required>
+      </div>
+      <div class="input-group">
+        <input type="password" placeholder="Senha" id="password" name="password" required>
+      </div>
+      <button type="submit">Entrar</button>
+      <p class="register-link">Novo aqui? <a href="/register">Criar conta</a></p>
+    </form>
+  </div>
+</body>
+</html> 

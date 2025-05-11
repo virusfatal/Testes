@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@distube/ytdl-core": "^4.16.10",
+    "assemblyai": "^4.12.2",
+    "axios": "^1.9.0",
+    "canvas": "^3.1.0",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "fs": "^0.0.1-security",
+    "jimp": "^0.16.2",
+    "memorystore": "^1.6.7",
+    "mongoose": "^8.14.0",
+    "path": "^0.12.7",
+    "sharp": "^0.34.1",
+    "yt-search": "^2.12.1",
+    "ytdl-core": "^4.11.5"
+  }
+}

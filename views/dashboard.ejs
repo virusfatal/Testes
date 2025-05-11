@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NebulaDark - Painel Premium</title>
+    
+    <!-- Dependências -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #7F5AF0;
+            --secondary: #16161A;
+            --accent: #2CB67D;
+            --dark: #0D0D11;
+            --light: #FFFFFE;
+            --gradient: linear-gradient(135deg, #16161A 0%, #0D0D11 100%);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            background: var(--gradient);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar Global */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(127, 90, 240, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        .text-emphasis {
+            color: var(--accent) !important;
+            font-weight: 600;
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        .value-display {
+            font-size: 1.4rem;
+            color: var(--accent);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Sidebar com Scroll */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: rgba(22, 22, 26, 0.98);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid var(--primary);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            z-index: 1000;
+            box-shadow: 8px 0 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(127, 90, 240, 0.2);
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+
+        .nav-link {
+            color: var(--text-primary) !important;
+            padding: 0.9rem 1.2rem;
+            margin: 0.3rem 0.8rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(127, 90, 240, 0.1), 
+                transparent);
+            transition: 0.5s;
+        }
+
+        .nav-link:hover {
+            background: rgba(127, 90, 240, 0.05);
+            transform: translateX(8px);
+        }
+
+        .nav-link:hover::before {
+            left: 100%;
+        }
+
+        .sidebar .dropdown-menu {
+            background: rgba(22, 22, 26, 0.98);
+            border: 1px solid var(--primary);
+            margin-left: 1rem;
+        }
+
+        .sidebar .dropdown-item {
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .dropdown-item:hover {
+            background: rgba(127, 90, 240, 0.1);
+            color: var(--accent);
+        }
+
+        /* Conteúdo Principal */
+        main {
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 15px rgba(44, 182, 125, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+        }
+
+        .card-custom {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(127, 90, 240, 0.2);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .card-custom:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Modal */
+        .pricing-modal .modal-content {
+            background: var(--secondary);
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+        }
+
+        .pricing-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(127, 90, 240, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card h4 {
+            color: var(--accent) !important;
+        }
+
+        .pricing-card .h2 {
+            color: var(--text-primary);
+        }
+
+        .pricing-card .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        .whatsapp-btn {
+            background: #25D366;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #25D366;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar {
+                width: 80%;
+                max-width: 280px;
+            }
+
+            .nav-link {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (min-width: 992px) {
+            main {
+                margin-left: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Modal de Compras -->
+<div class="modal fade pricing-modal" id="buyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border border-secondary">
+            <!-- Cabeçalho -->
+            <div class="modal-header border-0 position-relative">
+                <h3 class="modal-title w-100 text-center neon-text" style="
+                    font-family: 'Courier New', monospace;
+                    letter-spacing: 1px;
+                ">
+                    <span class="gradient-emoji">╭─╼⃝⸙͎⸙͎⸙͎</span>
+                    Tabela de Preços - Gon APIs 
+                    <span class="gradient-emoji">╾⃝</span>
+                    <span class="flag-glow">🇧🇷</span>
+                </h3>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Corpo -->
+            <div class="modal-body">
+                <div class="row g-4">
+                    <!-- Plano Basic -->
+                    <div class="col-12">
+                        <div class="pricing-card bg-black-gradient p-4 rounded-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="h4 text-accent me-2">🛡️ Basic</span>
+                                <span class="badge bg-primary">+ Popular</span>
+                            </div>
+                            <div class="my-3">
+                                <span class="h2 text-light">R$ 0,50</span>
+                                <span class="text-muted">/ 
+                                    <span class="text-primary fw-bold">✦ 500 Créditos</span>
+                                </span>
+                            </div>
+                            <button class="btn whatsapp-btn w-100 py-2 glow-on-hover" 
+                                    onclick="window.open('https://wa.me/5511981696711?text=Quero%20comprar%20o%20plano%20BASIC%20de%20500%20créditos')">
+                                <i class="fab fa-whatsapp me-2"></i>Garantir Agora
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Plano Pro -->
+                    <div class="col-12">
+                        <div class="pricing-card bg-black-gradient p-4 rounded-4">
+                            <h4 class="text-accent">🚀 Pro <span class="fs-6 text-success">(35% OFF)</span></h4>
+                            <div class="my-3">
+                                <span class="h2 text-light">R$ 1</span>
+                                <span class="text-muted">/ 
+                                    <span class="text-primary fw-bold">✦ 1.000 Créditos</span>
+                                </span>
+                            </div>
+                            <button class="btn whatsapp-btn w-100 py-2 glow-on-hover"
+                                    onclick="window.open('https://wa.me/5511981696711?text=Quero%20comprar%20o%20plano%20PRO%20de%201.000%20créditos')">
+                                <i class="fab fa-whatsapp me-2"></i>Garantir Agora
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Plano Premium -->
+                    <div class="col-12">
+                        <div class="pricing-card bg-black-gradient p-4 rounded-4">
+                            <h4 class="text-accent">🔥 Premium <span class="fs-6 text-warning">(Melhor Custo-Benefício)</span></h4>
+                            <div class="my-3">
+                                <span class="h2 text-light">R$ 10</span>
+                                <span class="text-muted">/ 
+                                    <span class="text-primary fw-bold">✦ 20.000 Créditos</span>
+                                </span>
+                            </div>
+                            <button class="btn whatsapp-btn w-100 py-2 glow-on-hover"
+                                    onclick="window.open('https://wa.me/5511981696711?text=Quero%20comprar%20o%20plano%20PREMIUM%20de%202.000%20créditos')">
+                                <i class="fab fa-whatsapp me-2"></i>Garantir Agora
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações Adicionais -->
+                <div class="mt-4 pt-3 border-top border-secondary">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center text-info">
+                                <i class="fas fa-bolt me-2"></i>
+                                <small>Recarga Instantânea via PIX</small>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center text-success">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <small>Plataforma 100% Segura</small>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-outline-warning w-100 mt-2" 
+                                    onclick="window.open('https://wa.me/5511981696711', '_blank')">
+                                <i class="fab fa-whatsapp me-2"></i>Suporte VIP 24/7
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-black-gradient {
+    background: linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 1px solid #343434;
+}
+
+.neon-text {
+    color: #00f3ff;
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+}
+
+.glow-on-hover:hover {
+    box-shadow: 0 0 15px rgba(37, 211, 102, 0.5);
+}
+
+.whatsapp-btn {
+    background: linear-gradient(45deg, #25D366, #128C7E);
+    color: white !important;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.flag-glow {
+    filter: drop-shadow(0 0 4px #00f3ff);
+}
+
+.gradient-emoji {
+    background: linear-gradient(45deg, #FF69B4, #00f3ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+</style>
+
+<!-- Menu Mobile -->
+<button class="btn menu-toggle d-lg-none position-fixed start-2 top-2 z-3" 
+        style="background: var(--primary); color: white; padding: 0.8rem;">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <img src="https://i.im.ge/2025/05/09/vgSNg9.1000986630.png" class="img-fluid">
+        <button class="btn btn-close btn-close-white d-lg-none position-absolute end-2 top-2"></button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav flex-column gap-1 mt-2 p-2">
+            <a href="/admin" class="nav-link">
+                <i class="fas fa-terminal me-2"></i>AdminPainel
+            </a>
+
+<div class="dropdown">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-download me-2"></i>Downloads
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="/play-audio/<%= user.key %>?q=mc livinho" class="dropdown-item">🎵 Play-Audio</a></li>
+        <li><a href="/play-video/<%= user.key %>?q=mc livinho" class="dropdown-item">🎥 Play-Vídeo</a></li>
+        <!-- Removi documents/pdf pois não existe na sua rota -->
+    </ul>
+</div>
+
+<div class="dropdown">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-info-circle me-2"></i>Infos
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="/movie/<%= user.key %>?q=" class="dropdown-item">🎬 Filmes</a></li>
+        <li><a href="/intoxianime/<%= user.key %>/search?q=" class="dropdown-item">📺 Animes</a></li>
+        <li><a href="/pesquisa/<%= user.key %>?q=" class="dropdown-item">▶️ Youtube</a></li>
+    </ul>
+</div>
+
+<div class="dropdown">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-image me-2"></i>Fotos
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="/memes/<%= user.key %>" class="dropdown-item">🤣 Memes</a></li>
+        <li><a href="/pixabay/<%= user.key %>/search?q=" class="dropdown-item">🏞️ Pixabay</a></li>
+    </ul>
+</div>
+
+<div class="dropdown">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-exclamation-triangle me-2"></i>+18
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="/xvideos/<%= user.key %>/search?q=mi" class="dropdown-item">🔞 Xvideos</a></li>
+        <!-- Adicionei a rota e-hentai que existe em suas rotas -->
+        <li><a href="/e-hentai/<%= user.key %>?q=" class="dropdown-item">👁️ E-Hentai</a></li>
+    </ul>
+</div>
+
+<div class="dropdown">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-palette me-2"></i>Montagens
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="/anime/<%= user.key %>?teks=" class="dropdown-item">🎨 Anime</a></li>
+        <!-- Adicionei a rota plaq que existe em suas rotas -->
+        <li><a href="/plaq/<%= user.key %>?texto=" class="dropdown-item">🔞 Plaq</a></li>
+    </ul>
+</div>
+
+<div class="dropdown">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-headset me-2"></i>Suporte
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="https://wa.me/5511981696711" class="dropdown-item">📱 WhatsApp</a></li>
+        <li><a href="https://whatsapp.com/channel/0029Vb5eTRI4SpkFOlLtX40R" class="dropdown-item">🤖 Canal</a></li>
+    </ul>
+</div>
+
+            <a href="https://xat.com/Apibase" class="nav-link">
+                <i class="fas fa-comments me-2"></i>Chat Online
+            </a>
+        </div>
+    </nav>
+</div>
+
+<!-- Conteúdo Principal -->
+<main>
+    <header class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h4 mb-0">👾 Olá, <%= user.username %></h2>
+            <% if(user.isAdm) { %>
+                <small class="text-accent">Status: Admin Master</small>
+            <% } else { %>
+                <small class="text-muted">Status: Usuário</small>
+            <% } %>
+        </div>
+        
+        <div class="dropdown">
+            <img src="<%= user.ft %>" class="user-avatar rounded-circle" data-bs-toggle="dropdown">
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a href="/myperfil" class="dropdown-item"><i class="fas fa-id-card me-2"></i>Perfil</a></li>
+                <li><a href="/login" class="dropdown-item"><i class="fas fa-power-off me-2"></i>Sair</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+            <div class="card-custom p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary p-3 rounded-circle">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div>
+                        <small class="label">Chave API</small>
+                        <div class="text-truncate value-display"><%= user.key %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="card-custom p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-success p-3 rounded-circle">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div>
+                        <small class="label">Saldo Disponível</small>
+                        <div class="value-display"><%= userDb.saldo %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-custom p-3 mb-4">
+        <h4 class="mb-3">🏆 Ranking de Usuários</h4>
+        <div class="row g-2">
+            <% topUsers.forEach((user, index) => { %>
+            <div class="col-12">
+                <div class="card-custom p-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="<%= user.ft %>" class="user-avatar rounded-circle">
+                        <div>
+                            <div class="text-truncate"><span class="text-accent">#<%= index + 1 %></span> <%= user.username %></div>
+                            <small class="text-primary"><%= user.saldo %> créditos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <footer class="text-center">
+        <button class="btn btn-lg btn-primary w-100" 
+                data-bs-toggle="modal" 
+                data-bs-target="#buyModal"
+                style="background: var(--primary); border: none;">
+            <i class="fas fa-shopping-cart me-2"></i>Comprar Créditos
+        </button>
+    </footer>
+</main>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+<script>
+    // Controle Mobile
+    const sidebar = document.querySelector('.sidebar');
+    const menuToggle = document.querySelector('.menu-toggle');
+    const closeBtn = document.querySelector('.sidebar .btn-close');
+
+    menuToggle.addEventListener('click', () => sidebar.classList.toggle('active'));
+    closeBtn.addEventListener('click', () => sidebar.classList.remove('active'));
+    
+    document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+
+    sidebar.addEventListener('click', (e) => e.stopPropagation());
+</script>
+</body>
+</html>
