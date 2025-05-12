@@ -215,7 +215,7 @@
   <div class="container">
     <h1>✏️ Editar Perfil</h1>
 
-    <form action="/#/edit/<%= user.username %>" method="post">
+    <form action="/edit/<%= user.username %>" method="post">
       <div class="form-group">
         <label for="password">Nova Senha</label>
         <input type="password" id="password" name="password" value="<%= user.password %>">
@@ -264,7 +264,7 @@
   <script>
     function confirmDelete() {
       if (confirm('Tem certeza que deseja excluir permanentemente esta conta?')) {
-        window.location.href = '/#/deletar/<%= user.username %>';
+        window.location.href = '/deletar/<%= user.username %>';
       }
     }
 
