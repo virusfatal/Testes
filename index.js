@@ -1284,7 +1284,7 @@ app.get('/play-video/:APIKEY', async (req, res) => {
 });
 // ============== ROTAS NORMAIS DA API ==============\\
 
-app.listen(3219, 8080, 80, () => {
+app.listen(3219, 3000, 8080, 80, () => {
   console.log("Server rodando: http://0.0.0.0:3219")
 })
 
