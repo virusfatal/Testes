@@ -195,7 +195,7 @@ app.post('/register', async (req, res) => {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const keycode = Math.floor(100000 + Math.random() * 900000).toString();
     const ft = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlEcOwa7TnrQ1uRihMsFmpIinyzREUXldvrLtrT_WbLRKV2_HUrT7xgLPd&s=10";
-    const saldo = 100000; 
+    const saldo = 100; 
     const total = 0;
     const key = keycode;
     const insta = "@clovermods"
