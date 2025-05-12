@@ -1042,114 +1042,130 @@ app.get('/metadinha/:APIKEY', async (req, res) => {
         });
     }
 });
+// NSFW Reddit
 app.get('/reddit/nsfw/:APIKEY', async (req, res) => {
-    const { APIKEY } = req.params;
-    const { q, limit = 15 } = req.query;
+  const { APIKEY } = req.params;
+  const { q, limit = 15 } = req.query;
 
-    try {
-        if (!(await User.findOne({ key: APIKEY }))) {
-            return res.status(401).json({ error: "Chave API inválida" });
-        }
+  try {
+    const user = await User.findOne({ key: APIKEY });
+    if (!user) return res.status(401).json({ error: "Chave API inválida" });
+    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
 
-        const response = await axios.get('https://www.reddit.com/search.json', {
-            params: {
-                q: `${q} (nsfw:yes) (url:.jpg OR url:.png)`,
-                sort: 'new',
-                t: 'all',
-                limit: 100,
-                include_over_18: 1,
-                raw_json: 1
-            },
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
+    const response = await axios.get('https://www.reddit.com/search.json', {
+      params: {
+        q: `${q} (nsfw:yes) (url:.jpg OR url:.png)`,
+        sort: 'new',
+        t: 'all',
+        limit: 100,
+        include_over_18: 1,
+        raw_json: 1
+      },
+      headers: {
+        'User-Agent': getRandomUserAgent(),
+        'X-Forwarded-For': req.ip,
+        'Referer': 'https://www.google.com/'
+      },
+      proxy: {
+        protocol: 'http',
+        host: '45.79.219.77',
+        port: 8888
+      }
+    });
 
-        const urls = response.data.data.children
-            .map(post => post.data.url
-                .replace('preview.', 'i.')
-                .split('?')[0]
-            )
-            .filter(url => /\.(jpg|jpeg|png|webp)$/i.test(url))
-            .slice(0, limit);
+    const urls = response.data.data.children
+      .map(post => post.data.url
+        .replace('preview.', 'i.')
+        .split('?')[0]
+      )
+      .filter(url => /\.(jpg|jpeg|png|webp)$/i.test(url))
+      .slice(0, limit);
 
-        const result = {};
-        urls.forEach((url, index) => {
-            result[`url${index + 1}`] = url;
-        });
+    const result = {};
+    urls.forEach((url, index) => {
+      result[`url${index + 1}`] = url;
+    });
 
-        res.json({
-            search: q,
-            count: urls.length,
-            ...result
-        });
-
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    if (!user.isAdm) {
+      user.saldo -= 1;
+      await user.save();
     }
+
+    res.json({
+      search: q,
+      count: urls.length,
+      ...result
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
+// Safe Reddit
 app.get('/reddit/safe/:APIKEY', async (req, res) => {
-    const { APIKEY } = req.params;
-    const { q, limit = 15 } = req.query;
+  const { APIKEY } = req.params;
+  const { q, limit = 15 } = req.query;
 
-    try {
-        // Verificação da chave
-        if (!(await User.exists({ key: APIKEY }))) {
-            return res.status(401).json({ error: "API Key inválida" });
-        }
+  try {
+    const user = await User.findOne({ key: APIKEY });
+    if (!user) return res.status(401).json({ error: "API Key inválida" });
+    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
 
-        // Busca livre com filtro NSFW estrito
-        const response = await axios.get('https://www.reddit.com/search.json', {
-            params: {
-                q: `${q} (nsfw:no) (url:.jpg OR url:.png OR url:.webp)`,
-                sort: 'relevance',
-                t: 'all',
-                limit: 100,
-                include_over_18: 0, // Bloqueio duplo
-                raw_json: 1
-            },
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Referer': 'https://www.reddit.com/'
-            }
-        });
+    const response = await axios.get('https://www.reddit.com/search.json', {
+      params: {
+        q: `${q} (nsfw:no) (url:.jpg OR url:.png OR url:.webp)`,
+        sort: 'relevance',
+        t: 'all',
+        limit: 100,
+        include_over_18: 0,
+        raw_json: 1
+      },
+      headers: {
+        'User-Agent': getRandomUserAgent(),
+        'Referer': 'https://www.reddit.com/'
+      }
+    });
 
-        // Processamento otimizado
-        const safeUrls = response.data.data.children
-            .filter(post => {
-                // Verificação tripla de segurança
-                const isNSFW = post.data.over_18 || 
-                              /nsfw/i.test(post.data.title) || 
-                              /nsfw/i.test(post.data.subreddit);
-                return !isNSFW;
-            })
-            .map(post => {
-                const cleanUrl = new URL(post.data.url);
-                cleanUrl.search = ''; // Remove parâmetros
-                return cleanUrl.href
-                    .replace('preview.redd.it', 'i.redd.it')
-                    .replace('&amp;', '&');
-            })
-            .filter(url => /\.(jpe?g|png|webp)$/i.test(url))
-            .slice(0, limit);
+    const safeUrls = response.data.data.children
+      .filter(post => {
+        const isNSFW = post.data.over_18 || 
+                      /nsfw/i.test(post.data.title) || 
+                      /nsfw/i.test(post.data.subreddit);
+        return !isNSFW;
+      })
+      .map(post => {
+        const cleanUrl = new URL(post.data.url);
+        cleanUrl.search = '';
+        return cleanUrl.href
+          .replace('preview.redd.it', 'i.redd.it')
+          .replace('&amp;', '&');
+      })
+      .filter(url => /\.(jpe?g|png|webp)$/i.test(url))
+      .slice(0, limit);
 
-        // Construção dinâmica do JSON
-        const result = {
-            query: q,
-            safe_search: true,
-            count: safeUrls.length
-        };
-        safeUrls.forEach((url, index) => {
-            result[`url${index + 1}`] = url;
-        });
+    const result = {
+      query: q,
+      safe_search: true,
+      count: safeUrls.length
+    };
+    safeUrls.forEach((url, index) => {
+      result[`url${index + 1}`] = url;
+    });
 
-        res.json(result);
-
-    } catch (error) {
-        res.status(500).json({ 
-            error: "Erro na busca segura",
-            details: error.message
-        });
+    if (!user.isAdm) {
+      user.saldo -= 1;
+      await user.save();
     }
+
+    res.json(result);
+
+  } catch (error) {
+    res.status(500).json({ 
+      error: "Erro na busca segura",
+      details: error.message
+    });
+  }
 });
 const ytdl = require('@distube/ytdl-core');
 
