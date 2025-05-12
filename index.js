@@ -1042,6 +1042,28 @@ app.get('/metadinha/:APIKEY', async (req, res) => {
         });
     }
 });
+const getRandomUserAgent = () => {
+  const agents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'
+  ];
+  return agents[Math.floor(Math.random() * agents.length)];
+};
+
+// Adicione este middleware para proxy (se necessário)
+const configureProxy = () => {
+  return {
+    protocol: 'http',
+    host: '45.79.219.77',
+    port: 8888,
+    auth: {
+      username: 'user', // Substitua se necessário
+      password: 'password' // Substitua se necessário
+    }
+  };
+};
 // NSFW Reddit
 app.get('/reddit/nsfw/:APIKEY', async (req, res) => {
   const { APIKEY } = req.params;
