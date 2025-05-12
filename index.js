@@ -1044,148 +1044,189 @@ app.get('/metadinha/:APIKEY', async (req, res) => {
 });
 const getRandomUserAgent = () => {
   const agents = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15',
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
-    'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3.1 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 14; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36'
   ];
   return agents[Math.floor(Math.random() * agents.length)];
 };
 
-// Adicione este middleware para proxy (se necessário)
-const configureProxy = () => {
-  return {
-    protocol: 'http',
-    host: '45.79.219.77',
-    port: 8888,
-    auth: {
-      username: 'user', // Substitua se necessário
-      password: 'password' // Substitua se necessário
-    }
-  };
+// Middleware específico para Reddit
+const redditCors = (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Expose-Headers', 'X-RateLimit-Remaining');
+  next();
 };
-// NSFW Reddit
-app.get('/reddit/nsfw/:APIKEY', async (req, res) => {
+
+// Rota NSFW Corrigida
+app.get('/reddit/nsfw/:APIKEY', redditCors, async (req, res) => {
   const { APIKEY } = req.params;
-  const { q, limit = 15 } = req.query;
+  const { q, page = 1, limit = 15 } = req.query;
 
   try {
-    const user = await User.findOne({ key: APIKEY });
-    if (!user) return res.status(401).json({ error: "Chave API inválida" });
-    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
+    // Validação de parâmetros
+    if (!q || q.length < 3) return res.status(400).json({ error: "Termo de busca inválido (mínimo 3 caracteres)" });
 
+    // Verificação do usuário
+    const user = await User.findOne({ key: APIKEY });
+    if (!user) return res.status(401).json({ error: "🔑 Chave API inválida" });
+    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json({ error: "💸 Saldo insuficiente" });
+
+    // Requisição ao Reddit
     const response = await axios.get('https://www.reddit.com/search.json', {
       params: {
-        q: `${q} (nsfw:yes) (url:.jpg OR url:.png)`,
-        sort: 'new',
+        q: `${q} nsfw:yes (url:.jpg OR url:.png)`,
+        sort: 'relevance',
         t: 'all',
-        limit: 100,
+        limit: 50,
+        raw_json: 1,
         include_over_18: 1,
-        raw_json: 1
+        type: 'link',
+        restrict_sr: 0
       },
       headers: {
         'User-Agent': getRandomUserAgent(),
-        'X-Forwarded-For': req.ip,
-        'Referer': 'https://www.google.com/'
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://www.google.com/',
+        'X-Requested-With': 'XMLHttpRequest'
       },
-      proxy: {
-        protocol: 'http',
-        host: '45.79.219.77',
-        port: 8888
-      }
+      timeout: 10000
     });
 
-    const urls = response.data.data.children
-      .map(post => post.data.url
-        .replace('preview.', 'i.')
-        .split('?')[0]
+    // Processamento dos resultados
+    const posts = response.data.data.children
+      .filter(post => 
+        post.data.url && 
+        /i\.redd\.it|reddit\.media/.test(post.data.url) &&
+        !post.data.over_18 === false
       )
-      .filter(url => /\.(jpg|jpeg|png|webp)$/i.test(url))
-      .slice(0, limit);
+      .map(post => ({
+        title: post.data.title,
+        url: post.data.url.replace(/&amp;/g, '&'),
+        subreddit: post.data.subreddit,
+        author: post.data.author,
+        nsfw: post.data.over_18,
+        ups: post.data.ups,
+        comments: post.data.num_comments
+      }));
 
-    const result = {};
-    urls.forEach((url, index) => {
-      result[`url${index + 1}`] = url;
-    });
+    // Paginação
+    const startIndex = (page - 1) * limit;
+    const paginatedResults = posts.slice(startIndex, startIndex + limit);
 
+    // Atualização do saldo
     if (!user.isAdm) {
       user.saldo -= 1;
       await user.save();
     }
 
+    // Resposta formatada
     res.json({
-      search: q,
-      count: urls.length,
-      ...result
+      status: true,
+      search_term: q,
+      total_results: posts.length,
+      current_page: parseInt(page),
+      results_per_page: parseInt(limit),
+      results: paginatedResults
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro NSFW:', error);
+    const statusCode = error.response?.status || 500;
+    res.status(statusCode).json({
+      status: false,
+      error: error.response?.statusText || 'Erro na busca',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
-// Safe Reddit
-app.get('/reddit/safe/:APIKEY', async (req, res) => {
+// Rota Safe Corrigida
+app.get('/reddit/safe/:APIKEY', redditCors, async (req, res) => {
   const { APIKEY } = req.params;
-  const { q, limit = 15 } = req.query;
+  const { q, page = 1, limit = 15 } = req.query;
 
   try {
-    const user = await User.findOne({ key: APIKEY });
-    if (!user) return res.status(401).json({ error: "API Key inválida" });
-    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json(loghandler.notparam);
+    // Validação rigorosa
+    if (!q || q.length < 3) return res.status(400).json({ error: "Termo de busca inválido (mínimo 3 caracteres)" });
+    if (limit > 30) return res.status(400).json({ error: "Limite máximo de 30 resultados por página" });
 
+    // Verificação do usuário
+    const user = await User.findOne({ key: APIKEY });
+    if (!user) return res.status(401).json({ error: "🔑 Chave API inválida" });
+    if (user.saldo <= 0 && !user.isAdm) return res.status(402).json({ error: "💸 Saldo insuficiente" });
+
+    // Requisição segura
     const response = await axios.get('https://www.reddit.com/search.json', {
       params: {
-        q: `${q} (nsfw:no) (url:.jpg OR url:.png OR url:.webp)`,
-        sort: 'relevance',
-        t: 'all',
+        q: `${q} nsfw:no (url:.jpg OR url:.png)`,
+        sort: 'top',
+        t: 'year',
         limit: 100,
+        raw_json: 1,
         include_over_18: 0,
-        raw_json: 1
+        type: 'link'
       },
       headers: {
         'User-Agent': getRandomUserAgent(),
-        'Referer': 'https://www.reddit.com/'
-      }
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://www.reddit.com/',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      timeout: 10000
     });
 
-    const safeUrls = response.data.data.children
+    // Filtragem avançada
+    const safePosts = response.data.data.children
       .filter(post => {
-        const isNSFW = post.data.over_18 || 
-                      /nsfw/i.test(post.data.title) || 
-                      /nsfw/i.test(post.data.subreddit);
+        const isNSFW = 
+          post.data.over_18 ||
+          /nsfw/i.test(post.data.title) ||
+          /nsfw/i.test(post.data.subreddit) ||
+          /porn|sex|xxx/i.test(post.data.selftext);
         return !isNSFW;
       })
-      .map(post => {
-        const cleanUrl = new URL(post.data.url);
-        cleanUrl.search = '';
-        return cleanUrl.href
+      .map(post => ({
+        title: post.data.title,
+        url: post.data.url
           .replace('preview.redd.it', 'i.redd.it')
-          .replace('&amp;', '&');
-      })
-      .filter(url => /\.(jpe?g|png|webp)$/i.test(url))
-      .slice(0, limit);
+          .replace(/&amp;/g, '&')
+          .split('?')[0],
+        subreddit: post.data.subreddit,
+        author: post.data.author,
+        ups: post.data.ups,
+        created_utc: post.data.created_utc
+      }))
+      .filter(post => /\.(jpe?g|png|webp)$/i.test(post.url));
 
-    const result = {
-      query: q,
-      safe_search: true,
-      count: safeUrls.length
-    };
-    safeUrls.forEach((url, index) => {
-      result[`url${index + 1}`] = url;
-    });
+    // Paginação
+    const startIndex = (page - 1) * limit;
+    const paginatedResults = safePosts.slice(startIndex, startIndex + limit);
 
+    // Atualização do saldo
     if (!user.isAdm) {
       user.saldo -= 1;
       await user.save();
     }
 
-    res.json(result);
+    // Resposta segura
+    res.json({
+      status: true,
+      search_term: q,
+      total_results: safePosts.length,
+      current_page: parseInt(page),
+      results_per_page: parseInt(limit),
+      results: paginatedResults
+    });
 
   } catch (error) {
-    res.status(500).json({ 
-      error: "Erro na busca segura",
-      details: error.message
+    console.error('Erro Safe:', error);
+    res.status(500).json({
+      status: false,
+      error: 'Erro na busca segura',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
